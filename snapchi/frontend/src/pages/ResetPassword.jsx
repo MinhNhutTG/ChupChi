@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client';
+import AuthLayout from '../components/AuthLayout';
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -24,19 +25,22 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="page">
-      <h1>Đặt lại mật khẩu</h1>
+    <AuthLayout title="Đặt lại mật khẩu">
       {done ? (
-        <p>
-          Đã đặt lại mật khẩu. <Link to="/login">Đăng nhập</Link>
-        </p>
+        <>
+          <div className="msg-box ok">Đã đặt lại mật khẩu.</div>
+          <p className="auth-switch"><Link to="/login">Đăng nhập</Link></p>
+        </>
       ) : (
         <form onSubmit={submit}>
-          <input type="password" placeholder="Mật khẩu mới (tối thiểu 8 ký tự)" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required />
-          {error && <p className="error">{error}</p>}
-          <button disabled={busy}>{busy ? 'Đang lưu…' : 'Đặt lại mật khẩu'}</button>
+          <div className="field">
+            <label htmlFor="password">Mật khẩu mới</label>
+            <input id="password" type="password" placeholder="Tối thiểu 8 ký tự, có hoa/thường/số" autoComplete="new-password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+          {error && <div className="msg-box err">{error}</div>}
+          <button className="btn-primary" disabled={busy}>{busy ? 'Đang lưu…' : 'Đặt lại mật khẩu'}</button>
         </form>
       )}
-    </div>
+    </AuthLayout>
   );
 }

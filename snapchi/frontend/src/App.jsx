@@ -1,36 +1,65 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import Layout from './components/Layout';
+import { CategoriesProvider } from './context/CategoriesContext';
 import { useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import Account from './pages/Account';
+import Capture from './pages/Capture';
+import Categories from './pages/Categories';
+import ForgotPassword from './pages/ForgotPassword';
+import Journal from './pages/Journal';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import Capture from './pages/Capture';
-import Confirm from './pages/Confirm';
-import Calendar from './pages/Calendar';
+import VerifyEmail from './pages/VerifyEmail';
+import VerifyEmailSent from './pages/VerifyEmailSent';
 
-function Protected({ children }) {
+// Chờ silent refresh xong mới quyết định cho vào app hay về trang đăng nhập
+function Protected() {
   const { user, loading } = useAuth();
-  if (loading) return <p className="center">Đang tải… (lần đầu có thể mất ~30 giây)</p>;
-  return user ? children : <Navigate to="/login" replace />;
+  if (loading) return <div className="center-msg">Đang tải…<br />(lần đầu có thể mất ~30 giây)</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  return (
+    <CategoriesProvider>
+      <Outlet />
+    </CategoriesProvider>
+  );
 }
 
-function GuestOnly({ children }) {
+function GuestOnly() {
   const { user, loading } = useAuth();
-  if (loading) return <p className="center">Đang tải…</p>;
-  return user ? <Navigate to="/" replace /> : children;
+  if (loading) return <div className="center-msg">Đang tải…</div>;
+  return user ? <Navigate to="/" replace /> : <Outlet />;
 }
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
-      <Route path="/register" element={<GuestOnly><Register /></GuestOnly>} />
-      <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/" element={<Protected><Capture /></Protected>} />
-      <Route path="/confirm" element={<Protected><Confirm /></Protected>} />
-      <Route path="/calendar" element={<Protected><Calendar /></Protected>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <div className="device">
+      <ToastProvider>
+        <Routes>
+          <Route element={<GuestOnly />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify" element={<VerifyEmailSent />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+          </Route>
+          {/* Mở từ link trong email nên không phụ thuộc trạng thái đăng nhập */}
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+          <Route element={<Protected />}>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Capture />} />
+              <Route path="/journal" element={<Journal />} />
+              <Route path="/account" element={<Account />} />
+            </Route>
+            <Route path="/account/categories" element={<Categories />} />
+          </Route>
+
+          <Route path="/calendar" element={<Navigate to="/journal" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ToastProvider>
+    </div>
   );
 }

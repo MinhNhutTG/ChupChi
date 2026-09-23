@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import 'express-async-errors';
+import dns from 'dns';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -8,6 +9,10 @@ import requireAuth from './middlewares/auth.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import categoryRoutes from './routes/categories.routes.js';
 import transactionRoutes from './routes/transactions.routes.js';
+import { startPurgeJob } from './utils/purge.js';
+
+// Tuỳ chọn: ép DNS khác khi resolver mặc định không tra được SRV của Atlas
+if (process.env.DNS_SERVERS) dns.setServers(process.env.DNS_SERVERS.split(','));
 
 const app = express();
 
@@ -31,7 +36,10 @@ app.use((err, _req, res, _next) => {
 
 const port = process.env.PORT || 4000;
 connectDB()
-  .then(() => app.listen(port, () => console.log(`API chạy ở cổng ${port}`)))
+  .then(() => {
+    app.listen(port, () => console.log(`API chạy ở cổng ${port}`));
+    startPurgeJob();
+  })
   .catch((err) => {
     console.error('Không kết nối được MongoDB:', err.message);
     process.exit(1);

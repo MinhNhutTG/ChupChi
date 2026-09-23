@@ -26,10 +26,17 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) =>
     applySession((await api.post('/auth/login', { email, password })).data);
-  const register = async (name, email, password) =>
-    applySession((await api.post('/auth/register', { name, email, password })).data);
+
+  // Khi bật xác thực email, server không cấp phiên mà trả { needsVerification: true }
+  const register = async (name, email, password) => {
+    const { data } = await api.post('/auth/register', { name, email, password });
+    if (data.accessToken) applySession(data);
+    return data;
+  };
+
   const loginWithGoogle = async (idToken) =>
     applySession((await api.post('/auth/google', { idToken })).data);
+
   const logout = async () => {
     await api.post('/auth/logout').catch(() => {});
     setAccessToken(null);

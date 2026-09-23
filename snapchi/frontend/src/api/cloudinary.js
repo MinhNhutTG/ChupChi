@@ -1,4 +1,10 @@
+import { PLACEHOLDER_IMG } from './format';
+
 const MAX_SIDE = 1200;
+const toJpeg = (canvas) =>
+  new Promise((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Không xử lý được ảnh'))), 'image/jpeg', 0.82)
+  );
 
 // Nén/resize ảnh phía client trước khi upload để tiết kiệm quota Cloudinary
 export async function compressImage(file) {
@@ -8,9 +14,23 @@ export async function compressImage(file) {
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
   canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Không nén được ảnh'))), 'image/jpeg', 0.8)
-  );
+  return toJpeg(canvas);
+}
+
+// Chụp 1 khung hình vuông (cắt giữa) từ thẻ <video> đang phát
+export function captureSquare(video) {
+  const side = Math.min(video.videoWidth, video.videoHeight);
+  const out = Math.min(side, MAX_SIDE);
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = out;
+  canvas
+    .getContext('2d')
+    .drawImage(
+      video,
+      (video.videoWidth - side) / 2, (video.videoHeight - side) / 2, side, side,
+      0, 0, out, out
+    );
+  return toJpeg(canvas);
 }
 
 // Upload thẳng lên Cloudinary bằng unsigned preset, trả về { imageUrl, imagePublicId }
@@ -27,6 +47,6 @@ export async function uploadImage(blob) {
   return { imageUrl: data.secure_url, imagePublicId: data.public_id };
 }
 
-// Thumbnail bằng URL transformation, không cần lưu file riêng
-export const thumb = (url, size = 150) =>
-  url.replace('/upload/', `/upload/w_${size},h_${size},c_fill/`);
+// Thumbnail bằng URL transformation, không cần lưu file riêng. url rỗng -> placeholder
+export const thumb = (url, size = 200) =>
+  url ? url.replace('/upload/', `/upload/w_${size},h_${size},c_fill/`) : PLACEHOLDER_IMG;

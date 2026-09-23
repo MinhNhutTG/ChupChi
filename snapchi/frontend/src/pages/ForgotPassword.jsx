@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
+import AuthLayout from '../components/AuthLayout';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -23,20 +24,17 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="page">
-      <h1>Quên mật khẩu</h1>
-      {message ? (
-        <p>{message}</p>
-      ) : (
-        <form onSubmit={submit}>
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          {error && <p className="error">{error}</p>}
-          <button disabled={busy}>{busy ? 'Đang gửi…' : 'Gửi liên kết đặt lại'}</button>
-        </form>
-      )}
-      <div className="links">
-        <Link to="/login">Quay lại đăng nhập</Link>
-      </div>
-    </div>
+    <AuthLayout title="Quên mật khẩu" sub="Nhập email đã đăng ký, mình sẽ gửi liên kết đặt lại mật khẩu.">
+      <form onSubmit={submit}>
+        <div className="field">
+          <label htmlFor="email">Email</label>
+          <input id="email" type="email" placeholder="ban@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </div>
+        {message && <div className="msg-box ok">{message}</div>}
+        {error && <div className="msg-box err">{error}</div>}
+        <button className="btn-primary" disabled={busy}>{busy ? 'Đang gửi…' : 'Gửi liên kết đặt lại'}</button>
+      </form>
+      <p className="auth-switch"><Link to="/login">← Quay lại đăng nhập</Link></p>
+    </AuthLayout>
   );
 }
