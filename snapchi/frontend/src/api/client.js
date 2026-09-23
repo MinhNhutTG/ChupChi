@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+// Production để trống VITE_API_URL: Vercel rewrite /api/* sang Render nên gọi cùng origin,
+// tránh cookie refresh token bị trình duyệt chặn vì là cookie bên thứ ba (third-party cookie).
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api`,
-  withCredentials: true, // gửi refresh cookie cross-domain
+  baseURL: `${import.meta.env.VITE_API_URL || ''}/api`,
+  withCredentials: true,
 });
 
 // Access token chỉ nằm trong memory (không dùng localStorage)
